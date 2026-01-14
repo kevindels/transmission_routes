@@ -1,0 +1,41 @@
+name: README Checks
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'README.md', 'screenshots/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'README.md', 'screenshots/**' ]
+
+jobs:
+  readme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Markdown lint
+        uses: igorshubovych/markdownlint-cli-action@v2
+        with:
+          version: '0.35.0'
+          files: README.md
+
+      - name: Check external links with lychee
+        uses: lycheeverse/lychee-action@v3
+        with:
+          args: README.md --exclude '#'
+
+      - name: Verify demo image reference and file
+        run: |
+          set -euo pipefail
+          if ! grep -q "screenshots/demo" README.md; then
+            echo "No demo reference found in README.md"
+            exit 1
+          fi
+          if [ ! -f screenshots/demo.svg ]; then
+            echo "screenshots/demo.svg not found"
+            ls -la screenshots || true
+            exit 1
+          fi
